@@ -27,7 +27,7 @@
 #   - sim_time: 1.7 → 1.0 — shorter rollout, less overcommit
 #   - vtheta_samples: 20 → 40 — more rotation options
 #   - max_vel_theta: 1.0 → 1.2 — more angular authority
-#   - inflation_radius: 0.38/0.40, cost_scaling_factor: 10.0
+#   - inflation_radius: 0.38/0.40, cost_scaling_factor: 5.0
 #
 # Fix round 4:
 #   - Custom BT added — was using Nav2 default (no rate-controlled replanning)
@@ -170,7 +170,7 @@ controller_server:
     progress_checker:
       plugin: nav2_controller::SimpleProgressChecker
       required_movement_radius: 0.20 # was 0,15
-      movement_time_allowance: 3.0 # was 3.0
+      movement_time_allowance: 8.0 # was 3.0
     # stateful: false — stops cleaner without yaw settling phase
     general_goal_checker:
       stateful: false
@@ -218,7 +218,7 @@ local_costmap:
   local_costmap:
     ros__parameters:
       use_sim_time: true
-      update_frequency: 5.0
+      update_frequency: 10.0
       publish_frequency: 2.0
       global_frame: odom
       robot_base_frame: base_footprint
@@ -231,7 +231,7 @@ local_costmap:
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         inflation_radius: 0.38
-        cost_scaling_factor: 10.0
+        cost_scaling_factor: 5.0
       obstacle_layer:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
@@ -280,7 +280,7 @@ global_costmap:
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         inflation_radius: 0.42
-        cost_scaling_factor: 10.0
+        cost_scaling_factor: 5.0
       always_send_full_costmap: true
 
 map_server:
