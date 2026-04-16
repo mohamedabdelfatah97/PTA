@@ -1,0 +1,41 @@
+# ROS2 build artifacts
+build/
+install/
+log/
+
+# Nav2 overlay — exclude everything except the built install
+nav2_overlay/build/
+nav2_overlay/install/
+nav2_overlay/log/
+nav2_overlay/src/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Gazebo logs
+*.log
+
+# Editor
+.vscode/
+*.swp
+*.swo
+
+# Old backup files
+*.csv
+export.log
+
+# Dead files from old workspace
+src/pta_robot_sim/config/nav2_params.yaml
+src/pta_robot_sim/config/nav2_params_backup.yaml
+src/pta_robot_sim/config/robot.rviz
+src/pta_robot_sim/config/joint_names_PTA_ROS2_Gazebo_URDF.yaml
+src/pta_robot_sim/launch/display.launch
+src/pta_robot_sim/launch/gazebo.launch
+src/pta_robot_sim/launch/gazebo.launch.py
+src/pta_robot_sim/launch/localization.launch.py
+src/pta_robot_sim/urdf/PTA_ROS2_Gazebo_URDF_v_stable.urdf
+
+# Hospital package
+src/pta_hospital/

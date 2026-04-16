@@ -1,0 +1,220 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="pta_test_room">
+
+    <!-- Physics -->
+    <physics type="ode">
+      <real_time_update_rate>1000</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+
+    <!-- Lighting -->
+    <light name="ceiling_light" type="directional">
+      <pose>2.155 1.385 4.0 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+      <direction>0 0 -1</direction>
+      <cast_shadows>false</cast_shadows>
+    </light>
+
+    <!-- Ambient -->
+    <scene>
+      <ambient>0.7 0.7 0.7 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>false</shadows>
+    </scene>
+
+    <!-- ==================== FLOOR (carpet) ==================== -->
+    <!-- Room: 4.31m (X) x 2.77m (Y)                           -->
+    <model name="floor">
+      <static>true</static>
+      <link name="floor_link">
+        <collision name="floor_collision">
+          <geometry>
+            <box><size>4.31 2.77 0.01</size></box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.8</mu>
+                <mu2>0.8</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="floor_visual">
+          <geometry>
+            <box><size>4.31 2.77 0.01</size></box>
+          </geometry>
+          <material>
+            <ambient>0.18 0.28 0.25 1</ambient>
+            <diffuse>0.18 0.28 0.25 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>2.155 1.385 -0.005 0 0 0</pose>
+    </model>
+
+    <!-- ==================== WALL LEFT (robot spawns near here) ==================== -->
+    <model name="wall_left">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>0.1 2.77 0.5</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.1 2.77 0.5</size></box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.95 0.95 1</ambient>
+            <diffuse>0.95 0.95 0.95 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>0.05 1.385 0.25 0 0 0</pose>
+    </model>
+
+    <!-- ==================== WALL RIGHT (dock is on this wall) ==================== -->
+    <model name="wall_right">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>0.1 2.77 2.5</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.1 2.77 2.5</size></box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.95 0.95 1</ambient>
+            <diffuse>0.95 0.95 0.95 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>4.26 1.385 1.25 0 0 0</pose>
+    </model>
+
+    <!-- ==================== WALL BOTTOM ==================== -->
+    <model name="wall_bottom">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>4.31 0.1 2.5</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>4.31 0.1 2.5</size></box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.95 0.95 1</ambient>
+            <diffuse>0.95 0.95 0.95 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>2.155 0.05 1.25 0 0 0</pose>
+    </model>
+
+    <!-- ==================== WALL TOP ==================== -->
+    <model name="wall_top">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>4.31 0.1 0.5</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>4.31 0.1 0.5</size></box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.95 0.95 1</ambient>
+            <diffuse>0.95 0.95 0.95 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>2.155 2.72 0.25 0 0 0</pose>
+    </model>
+
+    <!-- ==================== DOCK STATION ==================== -->
+    <!-- Centered on right wall (Y=1.385), against +X wall     -->
+    <!-- Orange slot faces -X toward robot                     -->
+    <model name="dock_station">
+      <static>true</static>
+      <link name="dock_body">
+        <collision name="collision">
+          <geometry>
+            <box><size>0.165 0.305 0.225</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.165 0.305 0.225</size></box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.95 0.92 1</ambient>
+            <diffuse>0.95 0.95 0.92 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <!-- Legs -->
+      <link name="leg_left">
+        <collision name="collision">
+          <geometry>
+            <cylinder><radius>0.025</radius><length>0.073</length></cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder><radius>0.025</radius><length>0.073</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.95 0.95 0.92 1</ambient>
+            <diffuse>0.95 0.95 0.92 1</diffuse>
+          </material>
+        </visual>
+        <pose>0 -0.09 0 0 0 0</pose>
+      </link>
+      <link name="leg_right">
+        <collision name="collision">
+          <geometry>
+            <cylinder><radius>0.025</radius><length>0.073</length></cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder><radius>0.025</radius><length>0.073</length></cylinder>
+          </geometry>
+          <material>
+            <ambient>0.95 0.95 0.92 1</ambient>
+            <diffuse>0.95 0.95 0.92 1</diffuse>
+          </material>
+        </visual>
+        <pose>0 0.09 0 0 0 0</pose>
+      </link>
+      <!-- Orange slot visual — facing -X toward robot -->
+      <link name="orange_slot">
+        <visual name="visual">
+          <geometry>
+            <box><size>0.01 0.15 0.03</size></box>
+          </geometry>
+          <material>
+            <ambient>0.9 0.5 0.1 1</ambient>
+            <diffuse>0.9 0.5 0.1 1</diffuse>
+          </material>
+        </visual>
+        <pose>-0.083 0 0.06 0 0 0</pose>
+      </link>
+      <pose>4.127 1.385 0.1485 0 0 0</pose>
+    </model>
+
+  </world>
+</sdf>

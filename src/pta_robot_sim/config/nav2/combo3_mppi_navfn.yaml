@@ -1,0 +1,506 @@
+# =======================================================================
+# Combination 3 — MPPI + NavFn (Holonomic/Mecanum Mode)
+# Controller: MPPI — native Omni motion model
+# Planner:    NavFn — Dijkstra/A* grid search
+#
+# IMPORTANT: Requires overlay-built nav2_mppi_controller
+#   source /opt/ros/humble/setup.bash
+#   source ~/nav2_overlay/install/setup.bash
+#   source ~/sim_ws/install/setup.bash
+#
+# -----------------------------------------------------------------------
+# BASE: Adapted from working real-robot nav2params_mppi.yaml (DiffDrive)
+#
+# Key adaptations made from real robot → sim:
+#
+#   MOTION MODEL
+#     DiffDrive → Omni
+#     vy_std/vy_max unlocked for lateral motion
+#     ay_max unlocked for lateral acceleration
+#     PreferForwardCritic kept but weight reduced (omni can go sideways)
+#     PathAlignCritic weight reduced 14.0→3.5 (omni doesn't need strict path lock)
+#     PathAngleCritic max_angle_to_furthest relaxed 0.1→0.5 (omni approach angles)
+#
+#   PERFORMANCE (NUC 10 constraints)
+#     batch_size: 2000 → 600
+#     time_steps: 50 → 40  (40 × 0.05 = 2.0s horizon)
+#     controller_frequency: 20.0 kept — model_dt: 0.05 requires this
+#     local costmap update_frequency matched to controller: 20.0
+#
+#   SIM-SPECIFIC
+#     use_sim_time: true throughout
+#     base_link → base_footprint
+#     odom_base → odom
+#     /merged_scan → /scan
+#     /fcamera/depth/color/points → /d455_depth/points (confirmed publishing)
+#     footprint: real robot 0.88×0.40 → sim robot 0.70×0.35
+#     map path → /home/pta-sim/maps/test_room.yaml
+#     NavFn planner kept (combo3), SmacPlanner2D commented for reference
+#     AMCL section added (not present in real robot file)
+#     map_saver + lifecycle managers added
+#
+#   INFLATION / COSTMAP
+#     inflation_radius: 0.4 — taken directly from real robot (proven working)
+#     cost_scaling_factor: 3.0 — taken directly from real robot (proven working)
+#     observation_persistence: 0.0 (sim — prevents ghost obstacles)
+#     Global costmap: LiDAR only (matches real robot)
+#     Local costmap: LiDAR + D455 depth (matches real robot structure)
+# =======================================================================
+
+amcl:
+  ros__parameters:
+    use_sim_time: true
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+    base_frame_id: base_footprint
+    beam_skip_distance: 0.5
+    beam_skip_error_threshold: 0.9
+    beam_skip_threshold: 0.3
+    do_beamskip: false
+    global_frame_id: map
+    lambda_short: 0.1
+    laser_likelihood_max_dist: 2.0
+    laser_max_range: 12.0
+    laser_min_range: 0.15
+    laser_model_type: likelihood_field
+    max_beams: 60
+    max_particles: 2000
+    min_particles: 500
+    odom_frame_id: odom
+    pf_err: 0.05
+    pf_z: 0.99
+    recovery_alpha_fast: 0.0
+    recovery_alpha_slow: 0.0
+    resample_interval: 1
+    robot_model_type: nav2_amcl::OmniMotionModel
+    save_pose_rate: 0.5
+    sigma_hit: 0.2
+    tf_broadcast: true
+    transform_tolerance: 2.0
+    update_min_a: 0.2
+    update_min_d: 0.25
+    z_hit: 0.5
+    z_max: 0.05
+    z_rand: 0.5
+    z_short: 0.05
+    scan_topic: /scan
+    set_initial_pose: true
+    initial_pose:
+      x: 0.5
+      y: 1.385
+      z: 0.0
+      yaw: 0.0
+
+bt_navigator:
+  ros__parameters:
+    use_sim_time: true
+    global_frame: map
+    robot_base_frame: base_footprint
+    odom_topic: /odometry/filtered
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    default_nav_to_pose_bt_xml: /home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/behavior_trees/navigate_to_pose_combo3.xml
+    always_reload_bt_xml: true
+    navigate_to_pose:
+      plugin: nav2_bt_navigator/NavigateToPoseNavigator
+    navigate_through_poses:
+      plugin: nav2_bt_navigator/NavigateThroughPosesNavigator
+    plugin_lib_names:
+      - nav2_compute_path_to_pose_action_bt_node
+      - nav2_compute_path_through_poses_action_bt_node
+      - nav2_smooth_path_action_bt_node
+      - nav2_follow_path_action_bt_node
+      - nav2_spin_action_bt_node
+      - nav2_wait_action_bt_node
+      - nav2_assisted_teleop_action_bt_node
+      - nav2_back_up_action_bt_node
+      - nav2_drive_on_heading_bt_node
+      - nav2_clear_costmap_service_bt_node
+      - nav2_is_stuck_condition_bt_node
+      - nav2_goal_reached_condition_bt_node
+      - nav2_goal_updated_condition_bt_node
+      - nav2_globally_updated_goal_condition_bt_node
+      - nav2_is_path_valid_condition_bt_node
+      - nav2_initial_pose_received_condition_bt_node
+      - nav2_reinitialize_global_localization_service_bt_node
+      - nav2_rate_controller_bt_node
+      - nav2_distance_controller_bt_node
+      - nav2_speed_controller_bt_node
+      - nav2_truncate_path_action_bt_node
+      - nav2_truncate_path_local_action_bt_node
+      - nav2_goal_updater_node_bt_node
+      - nav2_recovery_node_bt_node
+      - nav2_pipeline_sequence_bt_node
+      - nav2_round_robin_node_bt_node
+      - nav2_transform_available_condition_bt_node
+      - nav2_time_expired_condition_bt_node
+      - nav2_distance_traveled_condition_bt_node
+      - nav2_single_trigger_bt_node
+      - nav2_goal_updated_controller_bt_node
+      - nav2_is_battery_low_condition_bt_node
+      - nav2_navigate_through_poses_action_bt_node
+      - nav2_navigate_to_pose_action_bt_node
+      - nav2_remove_passed_goals_action_bt_node
+      - nav2_planner_selector_bt_node
+      - nav2_controller_selector_bt_node
+      - nav2_goal_checker_selector_bt_node
+      - nav2_controller_cancel_bt_node
+      - nav2_path_longer_on_approach_bt_node
+      - nav2_wait_cancel_bt_node
+      - nav2_spin_cancel_bt_node
+      - nav2_back_up_cancel_bt_node
+      - nav2_assisted_teleop_cancel_bt_node
+      - nav2_drive_on_heading_cancel_bt_node
+      - nav2_is_battery_charging_condition_bt_node
+
+controller_server:
+  ros__parameters:
+    use_sim_time: true
+    controller_frequency: 20.0            # must match: 1/model_dt = 1/0.05 = 20Hz
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.001       # unlocked for Omni
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
+    progress_checker_plugins: [progress_checker]
+    goal_checker_plugins: [general_goal_checker]
+    controller_plugins: [FollowPath]
+
+    progress_checker:
+      plugin: nav2_controller::SimpleProgressChecker
+      required_movement_radius: 0.05      # from real robot
+      movement_time_allowance: 10.0       # from real robot
+
+    general_goal_checker:
+      stateful: true
+      plugin: nav2_controller::SimpleGoalChecker
+      xy_goal_tolerance: 0.08             # from real robot
+      yaw_goal_tolerance: 0.25            # slightly relaxed vs real robot 0.1
+
+    FollowPath:
+      plugin: nav2_mppi_controller::MPPIController
+      motion_model: Omni
+
+      time_steps: 40                      # 40 × 0.05 = 2.0s horizon (NUC compromise vs real robot 50)
+      model_dt: 0.05                      # = 1/controller_frequency
+      batch_size: 600                     # reduced from real robot 2000 for NUC 10
+      iteration_count: 1
+      prune_distance: 2.0
+      transform_tolerance: 0.2
+      temperature: 0.3                    # from real robot
+      gamma: 0.015                        # from real robot
+      visualize: false
+      reset_period: 1.0
+      regenerate_noises: false
+
+      vx_max: 0.20                        # real robot: 0.25, slightly reduced for sim
+      vx_min: -0.10                       # from real robot
+      vy_max: 0.15                        # unlocked for Omni (real robot: 0.0)
+      wz_max: 1.2                         # real robot: 2.0, reduced for sim stability
+
+      ax_max: 1.0                         # from real robot
+      ax_min: -1.0                        # from real robot
+      ay_max: 1.0                         # unlocked for Omni (real robot: 0.0)
+      ay_min: -1.0                        # unlocked for Omni (real robot: 0.0)
+      az_max: 2.5                         # from real robot
+
+      vx_std: 0.2                         # from real robot
+      vy_std: 0.1                         # unlocked for Omni (real robot: 0.0)
+      wz_std: 0.2                         # from real robot
+
+      TrajectoryVisualizer:
+        trajectory_step: 5
+        time_step: 3
+
+      TrajectoryValidator:
+        plugin: "mppi::DefaultOptimalTrajectoryValidator"
+        collision_lookahead_time: 2.0
+        consider_footprint: false
+
+      # Critics — real robot DiffDrive set adapted for Omni
+      critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "GoalAngleCritic", "PathFollowCritic", "PathAngleCritic", "PathAlignCritic", "PreferForwardCritic"]
+
+      ConstraintCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 4.0                  # from real robot
+
+      CostCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 1.5                  # from real robot
+        critical_cost: 350.0              # from real robot
+        near_collision_cost: 200.0        # from real robot
+        consider_footprint: false         # from real robot
+        collision_cost: 1000000.0
+        inflation_layer_name: "inflation_layer"
+        near_goal_distance: 0.5           # from real robot
+        trajectory_point_step: 2
+
+      GoalCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0                  # from real robot
+        threshold_to_consider: 0.6        # from real robot
+
+      GoalAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 3.0                  # from real robot
+        threshold_to_consider: 0.5        # from real robot
+
+      PathFollowCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 8.0                  # from real robot
+        offset_from_furthest: 6           # from real robot
+        threshold_to_consider: 0.6        # from real robot
+
+      PathAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 2.5                  # from real robot
+        offset_from_furthest: 20          # from real robot
+        threshold_to_consider: 0.5        # from real robot
+        max_angle_to_furthest: 0.5        # relaxed vs real robot 0.1 — Omni approaches from wider angles
+        mode: 0
+
+      PathAlignCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 3.5                  # reduced vs real robot 14.0 — Omni doesn't need strict path lock
+        max_path_occupancy_ratio: 0.12    # from real robot
+        trajectory_point_step: 4          # from real robot
+        threshold_to_consider: 0.5        # from real robot
+        offset_from_furthest: 20          # from real robot
+        use_path_orientations: false
+
+      PreferForwardCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 2.5                  # reduced vs real robot 4.0 — Omni can legitimately go sideways
+        threshold_to_consider: 0.5        # from real robot
+
+      # Uncomment if robot twirls excessively
+      # TwirlingCritic:
+      #   enabled: true
+      #   twirling_cost_power: 1          # NOTE: uses twirling_ prefix, not cost_power
+      #   twirling_cost_weight: 10.0
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      use_sim_time: true
+      update_frequency: 5.0               # from real robot
+      publish_frequency: 5.0              # from real robot
+      global_frame: map
+      robot_base_frame: base_footprint
+      footprint: "[[-0.35, -0.175], [-0.35, 0.175], [0.35, 0.175], [0.35, -0.175]]"
+      resolution: 0.05
+      track_unknown_space: true
+      always_send_full_costmap: true
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+
+      static_layer:
+        plugin: nav2_costmap_2d::StaticLayer
+        map_subscribe_transient_local: true
+
+      obstacle_layer:
+        plugin: nav2_costmap_2d::ObstacleLayer
+        enabled: true
+        observation_sources: scan          # global = LiDAR only (matches real robot)
+        scan:
+          topic: /scan                     # sim topic (real robot: /merged_scan)
+          max_obstacle_height: 2.0
+          clearing: true
+          marking: true
+          data_type: LaserScan
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 5.0
+          obstacle_min_range: 0.0
+          observation_persistence: 0.0
+
+      inflation_layer:
+        plugin: nav2_costmap_2d::InflationLayer
+        cost_scaling_factor: 3.0          # from real robot — proven working value
+        inflation_radius: 0.4             # from real robot — proven working value
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      use_sim_time: true
+      update_frequency: 20.0              # matched to controller_frequency
+      publish_frequency: 5.0
+      global_frame: odom                  # sim: odom (real robot: odom_base)
+      robot_base_frame: base_footprint
+      rolling_window: true
+      width: 5                            # from real robot
+      height: 5                           # from real robot
+      resolution: 0.05
+      footprint: "[[-0.35, -0.175], [-0.35, 0.175], [0.35, 0.175], [0.35, -0.175]]"
+      always_send_full_costmap: true
+      plugins: ["obstacle_layer", "inflation_layer"]
+
+      obstacle_layer:
+        plugin: nav2_costmap_2d::ObstacleLayer
+        enabled: true
+        footprint_clearing_enabled: true
+        observation_sources: scan depth_camera   # LiDAR + depth (matches real robot structure)
+        scan:
+          topic: /scan                     # sim topic (real robot: /merged_scan)
+          max_obstacle_height: 2.0
+          clearing: true
+          marking: true
+          data_type: LaserScan
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 5.0
+          obstacle_min_range: 0.0
+          observation_persistence: 0.0
+        depth_camera:                      # D455 (real robot: /fcamera/depth/color/points)
+          topic: /d455_depth/points        # sim topic — confirmed publishing
+          max_obstacle_height: 2.0
+          min_obstacle_height: 0.05        # from real robot
+          clearing: true
+          marking: true
+          data_type: PointCloud2
+          obstacle_max_range: 4.0          # from real robot
+          obstacle_min_range: 0.0
+          raytrace_max_range: 4.5          # from real robot
+          raytrace_min_range: 0.0
+          observation_persistence: 0.0
+
+      inflation_layer:
+        plugin: nav2_costmap_2d::InflationLayer
+        cost_scaling_factor: 3.0          # from real robot — proven working value
+        inflation_radius: 0.4             # from real robot — proven working value
+
+map_server:
+  ros__parameters:
+    use_sim_time: true
+    yaml_filename: /home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/maps/test_room.yaml
+
+map_saver:
+  ros__parameters:
+    use_sim_time: true
+    save_map_timeout: 5.0
+    free_thresh_default: 0.25
+    occupied_thresh_default: 0.65
+    map_subscribe_transient_local: true
+
+planner_server:
+  ros__parameters:
+    use_sim_time: true
+    expected_planner_frequency: 3.0
+    planner_plugins: [GridBased]
+
+    GridBased:
+      plugin: nav2_navfn_planner/NavfnPlanner   # combo3 = NavFn
+      tolerance: 0.1
+      use_astar: true
+      allow_unknown: true
+
+    # SmacPlanner2D — for combo4, swap plugin above with this block
+    # GridBased:
+    #   plugin: nav2_smac_planner/SmacPlanner2D
+    #   tolerance: 0.125
+    #   downsample_costmap: false
+    #   downsampling_factor: 1
+    #   allow_unknown: true
+    #   max_iterations: 1000000
+    #   max_on_approach_iterations: 1000
+    #   max_planning_time: 2.0
+    #   cost_travel_multiplier: 2.0
+    #   use_final_approach_orientation: false
+    #   smoother:
+    #     max_iterations: 1000
+    #     w_smooth: 0.3
+    #     w_data: 0.2
+    #     tolerance: 1.0e-10
+
+smoother_server:
+  ros__parameters:
+    use_sim_time: true
+    smoother_plugins: [simple_smoother]
+    simple_smoother:
+      plugin: nav2_smoother::SimpleSmoother
+      tolerance: 1.0e-10
+      max_its: 1000
+      do_refinement: true
+
+behavior_server:
+  ros__parameters:
+    use_sim_time: true
+    costmap_topic: local_costmap/costmap_raw
+    footprint_topic: local_costmap/published_footprint
+    cycle_frequency: 10.0
+    behavior_plugins: [spin, backup, drive_on_heading, assisted_teleop, wait]
+    spin:
+      plugin: nav2_behaviors/Spin
+    backup:
+      plugin: nav2_behaviors/BackUp
+    drive_on_heading:
+      plugin: nav2_behaviors/DriveOnHeading
+    wait:
+      plugin: nav2_behaviors/Wait
+    assisted_teleop:
+      plugin: nav2_behaviors/AssistedTeleop
+    global_frame: odom                    # sim: odom (real robot: odom_base)
+    robot_base_frame: base_footprint
+    transform_tolerance: 0.5
+    simulate_ahead_time: 2.0              # from real robot
+    max_rotational_vel: 1.5               # from real robot
+    min_rotational_vel: 0.2               # from real robot
+    rotational_acc_lim: 2.0               # from real robot
+
+waypoint_follower:
+  ros__parameters:
+    use_sim_time: true
+    loop_rate: 20
+    stop_on_failure: false
+    waypoint_task_executor_plugin: wait_at_waypoint
+    wait_at_waypoint:
+      plugin: nav2_waypoint_follower::WaitAtWaypoint
+      enabled: true
+      waypoint_pause_duration: 200
+
+velocity_smoother:
+  ros__parameters:
+    use_sim_time: true
+    smoothing_frequency: 20.0             # matches controller_frequency
+    scale_velocities: false
+    feedback: CLOSED_LOOP
+    max_velocity: [0.20, 0.15, 1.2]       # matches vx_max, vy_max, wz_max
+    min_velocity: [-0.10, -0.15, -1.2]    # matches vx_min, symmetric vy and wz
+    max_accel: [1.0, 1.0, 2.5]            # matches ax_max, ay_max, az_max
+    max_decel: [-1.0, -1.0, -2.5]
+    odom_topic: /odometry/filtered
+    odom_duration: 0.1
+    deadband_velocity: [0.0, 0.0, 0.0]
+    velocity_timeout: 1.0
+
+lifecycle_manager_localization:
+  ros__parameters:
+    use_sim_time: true
+    autostart: false
+    bond_timeout: 15.0
+    node_names:
+      - map_server
+      - amcl
+
+lifecycle_manager_navigation:
+  ros__parameters:
+    use_sim_time: true
+    autostart: false
+    bond_timeout: 15.0
+    node_names:
+      - controller_server
+      - smoother_server
+      - planner_server
+      - behavior_server
+      - bt_navigator
+      - waypoint_follower
+      - velocity_smoother
