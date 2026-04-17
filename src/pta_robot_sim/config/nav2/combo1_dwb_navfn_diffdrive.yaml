@@ -43,6 +43,16 @@
 #   - trans_stopped_velocity: 0.05 → 0.03 — cleaner stop
 #   - velocity_smoother feedback: OPEN_LOOP → CLOSED_LOOP — matches combo3
 #   - velocity_smoother max/min_velocity aligned to new speed limits
+#
+# Fix round 5:
+#   - cost_scaling_factor: 5.0 → 3.0 (both costmaps) — matches combo3 proven value
+#     Sharp dropoff at 5.0 meant NavFn saw almost no cost difference between routing
+#     around vs through an obstacle. 3.0 gives a wider gradient NavFn can follow.
+#   - Added depth_camera to local costmap — D455 /d455_depth/points catches thin
+#     objects (unit_box) that LiDAR rays pass through
+#   - obstacle_max_range: 4.5 → 5.0 in global costmap — matches combo3
+#   - raytrace_min_range: 0.0 added to global costmap scan — matches combo3
+#   - max_vel_x: 0.15 → 0.10, max_vel_theta: 0.8 → 0.5 — reduce jerkiness on NUC
 # =======================================================================
 
 amcl:
@@ -181,12 +191,12 @@ controller_server:
       plugin: dwb_core::DWBLocalPlanner
       # Diff drive — no lateral motion
       min_vel_x: -0.10 # allow slight reverse for recovery
-      max_vel_x: 0.15  # reduced from 0.20 — conservative baseline
+      max_vel_x: 0.10  # was 0.15 — reduced to minimize jerk on NUC
       min_vel_y: 0.0
       max_vel_y: 0.0
-      max_vel_theta: 0.8  # reduced from 1.2 — less aggressive turning
+      max_vel_theta: 0.5  # was 0.8 — reduced to minimize jerk on NUC
       min_speed_xy: 0.0
-      max_speed_xy: 0.15  # matches max_vel_x
+      max_speed_xy: 0.10  # matches max_vel_x
       min_speed_theta: 0.0
       acc_lim_x: 2.5
       acc_lim_y: 0.0
@@ -231,28 +241,40 @@ local_costmap:
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         inflation_radius: 0.38
-        cost_scaling_factor: 5.0
+        cost_scaling_factor: 3.0          # was 5.0 — matches combo3, wider gradient
       obstacle_layer:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
         footprint_clearing_enabled: true
-        observation_sources: scan
+        observation_sources: scan depth_camera
         scan:
           topic: /scan
           data_type: LaserScan
           marking: true
           clearing: true
           inf_is_valid: true
-          observation_persistence: 0.0 # sim — no ghost obstacles
+          observation_persistence: 0.0
           obstacle_max_range: 4.5
           raytrace_max_range: 5.0
+        depth_camera:                     # added — D455 catches thin objects LiDAR misses
+          topic: /d455_depth/points
+          data_type: PointCloud2
+          marking: true
+          clearing: true
+          min_obstacle_height: 0.05
+          max_obstacle_height: 2.0
+          observation_persistence: 0.0
+          obstacle_max_range: 4.0
+          obstacle_min_range: 0.0
+          raytrace_max_range: 4.5
+          raytrace_min_range: 0.0
       always_send_full_costmap: true
 
 global_costmap:
   global_costmap:
     ros__parameters:
       use_sim_time: true
-      update_frequency: 5.0 # was 2.0
+      update_frequency: 5.0
       publish_frequency: 1.0
       global_frame: map
       robot_base_frame: base_footprint
@@ -266,7 +288,7 @@ global_costmap:
       obstacle_layer:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
-        footprint_clearing_enabled: true
+        footprint_clearing_enabled: false
         observation_sources: scan
         scan:
           topic: /scan
@@ -274,13 +296,15 @@ global_costmap:
           marking: true
           clearing: true
           inf_is_valid: true
-          observation_persistence: 0.0 # sim — no ghost obstacles
-          obstacle_max_range: 4.5
+          observation_persistence: 0.0
+          obstacle_max_range: 5.0          # was 4.5 — matches combo3, detects from further
           raytrace_max_range: 5.0
+          raytrace_min_range: 0.0          # added — matches combo3
+          transform_tolerance: 1.0
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         inflation_radius: 0.42
-        cost_scaling_factor: 5.0
+        cost_scaling_factor: 3.0          # was 5.0 — matches combo3, key fix for path routing around obstacles
       always_send_full_costmap: true
 
 map_server:
@@ -358,8 +382,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: CLOSED_LOOP
-    max_velocity: [0.15, 0.0, 0.8]
-    min_velocity: [-0.10, 0.0, -0.8]
+    max_velocity: [0.10, 0.0, 0.5]
+    min_velocity: [-0.10, 0.0, -0.5]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: /odometry/filtered
