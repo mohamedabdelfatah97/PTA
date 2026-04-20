@@ -14,7 +14,7 @@ def launch_setup(context, *args, **kwargs):
     nav2_bringup   = get_package_share_directory('nav2_bringup')
     gazebo_ros_pkg = get_package_share_directory('gazebo_ros')
 
-    urdf_file = os.path.join(pkg, 'urdf', 'pta_robot.urdf')
+    urdf_file  = os.path.join(pkg, 'urdf', 'pta_robot_planar.urdf')
     world_file = os.path.join(pkg, 'worlds', 'test_room.world')
     map_file   = os.path.join(pkg, 'maps', 'test_room.yaml')
 
@@ -31,6 +31,7 @@ def launch_setup(context, *args, **kwargs):
     nav2_params = combo_to_file[combo]
     print(f'[nav2.launch.py] Using Nav2 combo: {combo} → {nav2_params}')
 
+    # ── t=0: Gazebo ──────────────────────────────────────────────────────────
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(gazebo_ros_pkg, 'launch', 'gazebo.launch.py')
@@ -38,6 +39,7 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={'world': world_file, 'verbose': 'false'}.items()
     )
 
+    # ── t=0: Robot State Publisher ───────────────────────────────────────────
     rsp = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -45,13 +47,7 @@ def launch_setup(context, *args, **kwargs):
         output='screen'
     )
 
-    jsp = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        parameters=[{'use_sim_time': True}],
-        output='screen'
-    )
-
+    # ── t=0: EKF — fuses /odom from mecanum_drive_node + IMU ─────────────────
     ekf_node = Node(
         package='robot_localization',
         executable='ekf_node',
@@ -63,6 +59,7 @@ def launch_setup(context, *args, **kwargs):
         ]
     )
 
+    # ── t=0: Laser merger ────────────────────────────────────────────────────
     laser_merger = Node(
         package='dual_laser_merger',
         executable='dual_laser_merger_node',
@@ -81,6 +78,10 @@ def launch_setup(context, *args, **kwargs):
         }]
     )
 
+    # NOTE: joint_state_publisher REMOVED — replaced by joint_state_broadcaster
+    # from ros2_control (spawned below after robot is loaded into Gazebo)
+
+    # ── t=20: Spawn robot ────────────────────────────────────────────────────
     spawn = TimerAction(period=20.0, actions=[
         Node(
             package='gazebo_ros',
@@ -88,7 +89,7 @@ def launch_setup(context, *args, **kwargs):
             arguments=[
                 '-topic', 'robot_description',
                 '-entity', 'pta_robot',
-                '-x', '0.5',
+                '-x', '0.65',
                 '-y', '1.385',
                 '-z', '0.0',
                 '-Y', '0.0',
@@ -97,6 +98,50 @@ def launch_setup(context, *args, **kwargs):
         )
     ])
 
+    # ── t=25: Spawn joint_state_broadcaster ─────────────────────────────────
+    # Waits until after robot is spawned so controller_manager is alive.
+    # Publishes /joint_states for all 4 wheel joints.
+    spawn_jsb = TimerAction(period=25.0, actions=[
+        Node(
+            package='controller_manager',
+            executable='spawner',
+            arguments=[
+                'joint_state_broadcaster',
+                '--controller-manager', '/controller_manager',
+            ],
+            output='screen'
+        )
+    ])
+
+    # ── t=27: Spawn wheel velocity controller ────────────────────────────────
+    # Accepts Float64MultiArray on /wheel_velocity_controller/commands
+    # Joint order: [F_L, F_R, R_L, R_R]
+    spawn_wheel_ctrl = TimerAction(period=27.0, actions=[
+        Node(
+            package='controller_manager',
+            executable='spawner',
+            arguments=[
+                'wheel_velocity_controller',
+                '--controller-manager', '/controller_manager',
+            ],
+            output='screen'
+        )
+    ])
+
+    # ── t=29: Mecanum drive node ──────────────────────────────────────────────
+    # Converts /cmd_vel → wheel velocity commands
+    # Publishes raw /odom from wheel velocities (no TF — EKF handles that)
+    mecanum_node = TimerAction(period=29.0, actions=[
+        Node(
+            package='pta_robot_sim',
+            executable='mecanum_drive_node.py',
+            name='mecanum_drive_node',
+            output='screen',
+            parameters=[{'use_sim_time': True}],
+        )
+    ])
+
+    # ── t=65: RViz ───────────────────────────────────────────────────────────
     rviz = TimerAction(period=65.0, actions=[
         Node(
             package='rviz2',
@@ -108,6 +153,7 @@ def launch_setup(context, *args, **kwargs):
         )
     ])
 
+    # ── t=70: Localization (map_server + amcl) ────────────────────────────────
     localization = TimerAction(period=70.0, actions=[
         GroupAction(
             scoped=True,
@@ -128,6 +174,7 @@ def launch_setup(context, *args, **kwargs):
         )
     ])
 
+    # ── t=90: Navigation stack ───────────────────────────────────────────────
     navigation = TimerAction(period=90.0, actions=[
         GroupAction(
             scoped=True,
@@ -148,8 +195,10 @@ def launch_setup(context, *args, **kwargs):
     ])
 
     return [
-        gazebo, rsp, jsp, ekf_node, laser_merger,
-        spawn, rviz,
+        gazebo, rsp, ekf_node, laser_merger,
+        spawn,
+        spawn_jsb, spawn_wheel_ctrl, mecanum_node,
+        rviz,
         localization, navigation,
     ]
 

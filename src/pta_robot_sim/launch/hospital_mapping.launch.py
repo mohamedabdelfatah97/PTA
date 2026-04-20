@@ -7,7 +7,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     pkg = get_package_share_directory('PTA_ROS2_Gazebo_URDF')
-    urdf_file = os.path.join(pkg, 'urdf', 'PTA_ROS2_Gazebo_URDF.urdf')
+    urdf_file = os.path.join(pkg, 'urdf', 'pta_robot_planar.urdf')
     gazebo_ros_pkg = get_package_share_directory('gazebo_ros')
 
     # Hospital world path

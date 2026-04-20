@@ -7,7 +7,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     pkg            = get_package_share_directory('pta_robot_sim')
-    urdf_file      = os.path.join(pkg, 'urdf', 'pta_robot.urdf')
+    urdf_file      = os.path.join(pkg, 'urdf', 'pta_robot_planar.urdf')
     world_file     = os.path.join(pkg, 'worlds', 'test_room.world')
     gazebo_ros_pkg = get_package_share_directory('gazebo_ros')
 

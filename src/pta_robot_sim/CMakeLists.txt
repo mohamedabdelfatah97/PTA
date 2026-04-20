@@ -17,3 +17,9 @@ install(
 )
 
 ament_package()
+
+install(
+  PROGRAMS
+    src/mecanum_drive_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)

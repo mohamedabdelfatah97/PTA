@@ -1,0 +1,73 @@
+# =======================================================================
+# PTA Robot Simulation - Step 1 controller config
+#
+# Purpose of this file:
+#   1) Freeze one explicit wheel semantic mapping for the CURRENT sim URDF.
+#   2) Verify wheel naming / ordering before changing Gazebo backend.
+#   3) Do NOT assume this alone will fix mecanum physics in Gazebo Classic.
+#
+# Canonical body-frame convention used here for the CURRENT sim URDF:
+#   FL = +x, +y
+#   FR = +x, -y
+#   RL = -x, +y
+#   RR = -x, -y
+#
+# Current joint mapping from pta_robot.urdf:
+#   F_L_Wheel_Joint -> front_left
+#   F_R_Wheel_Joint -> front_right
+#   R_L_Wheel_Joint -> rear_left
+#   R_R_Wheel_Joint -> rear_right
+#
+# Important:
+#   This file is for semantic verification first.
+#   If forward works but rotate / strafe are still physically wrong after this,
+#   the next problem is likely Gazebo wheel-ground interaction, not controller
+#   loading or YAML syntax.
+# =======================================================================
+
+controller_manager:
+  ros__parameters:
+    update_rate: 50
+    use_sim_time: true
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    mecanum_drive_controller:
+      type: mecanum_drive_controller/MecanumDriveController
+
+mecanum_drive_controller:
+  ros__parameters:
+    # Use geometry_msgs/msg/Twist on:
+    #   /mecanum_drive_controller/reference_unstamped
+    use_stamped_vel: false
+
+    # Short timeout helps repeatable bench tests.
+    reference_timeout: 0.25
+
+    # Step 1 mapping: keep the CURRENT sim URDF wheel semantics unchanged.
+    front_left_wheel_command_joint_name: F_L_Wheel_Joint
+    front_right_wheel_command_joint_name: F_R_Wheel_Joint
+    rear_left_wheel_command_joint_name: R_L_Wheel_Joint
+    rear_right_wheel_command_joint_name: R_R_Wheel_Joint
+
+    # Optional explicit state-joint mapping for clearer controller semantics.
+    front_left_wheel_state_joint_name: F_L_Wheel_Joint
+    front_right_wheel_state_joint_name: F_R_Wheel_Joint
+    rear_left_wheel_state_joint_name: R_L_Wheel_Joint
+    rear_right_wheel_state_joint_name: R_R_Wheel_Joint
+
+    kinematics:
+      base_frame_offset:
+        x: 0.0
+        y: 0.0
+        theta: 0.0
+      wheels_radius: 0.0508
+      sum_of_robot_center_projection_on_X_Y_axis: 0.5175
+
+    base_frame_id: base_link
+    odom_frame_id: odom
+    enable_odom_tf: true
+
+    pose_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 0.01]
+    twist_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 0.01]
