@@ -121,7 +121,7 @@ def launch_setup(context, *args, **kwargs):
             package='controller_manager',
             executable='spawner',
             arguments=[
-                'wheel_velocity_controller',
+                'mecanum_drive_controller',
                 '--controller-manager', '/controller_manager',
             ],
             output='screen'
@@ -137,7 +137,7 @@ def launch_setup(context, *args, **kwargs):
             executable='mecanum_drive_node.py',
             name='mecanum_drive_node',
             output='screen',
-            parameters=[{'use_sim_time': True}],
+            parameters=[{'use_sim_time': True, 'publish_odom': False}],
         )
     ])
 
