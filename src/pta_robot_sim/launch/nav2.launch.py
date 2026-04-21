@@ -1,3 +1,31 @@
+"""
+nav2.launch.py — Nav2 benchmark launch (all combos)
+
+ARCHITECTURE — Benchmark mode:
+  /cmd_vel → gazebo_ros_planar_move plugin → body motion (kinematic)
+  /odom   ← plugin → EKF → /odometry/filtered → Nav2
+
+  All four combos share this identical backend. The only variable
+  between combos is the Nav2 parameter file (planner + controller config).
+  This gives a clean apples-to-apples algorithm comparison.
+
+  combo1 — DWB + NavFn, nonholonomic constraint (vy=0, DifferentialMotionModel)
+  combo2 — DWB + NavFn, holonomic (vy enabled, OmniMotionModel)
+  combo3 — MPPI + NavFn, holonomic, smooth trajectories  ← recommended
+  combo4 — MPPI + SmacPlanner2D, holonomic, corridor-aware
+
+WHAT IS NOT IN THIS LAUNCH (by design):
+  - mecanum_drive_node.py — removed. It published to /wheel_velocity_controller/commands
+    which does not exist in ros2_controllers.yaml. It was dead code in this path.
+  - Wheel odometry path — not needed. Plugin owns /odom. EKF fuses plugin odom + IMU.
+  - True diff-drive backend for combo1 — combo1 is nonholonomic at the Nav2 layer only.
+    If a true diff-drive physical simulation is needed later, use a separate launch.
+
+WHEEL SPINNING (cosmetic only):
+  joint_state_broadcaster + mecanum_drive_controller are spawned for visual realism.
+  They do not affect body motion or odometry. They can be removed if not needed.
+"""
+
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -29,7 +57,8 @@ def launch_setup(context, *args, **kwargs):
         'combo4': os.path.join(pkg, 'config', 'nav2', 'combo4_mppi_smac2d.yaml'),
     }
     nav2_params = combo_to_file[combo]
-    print(f'[nav2.launch.py] Using Nav2 combo: {combo} → {nav2_params}')
+    print(f'[nav2.launch.py] Benchmark mode — combo: {combo}')
+    print(f'[nav2.launch.py] Params: {nav2_params}')
 
     # ── t=0: Gazebo ──────────────────────────────────────────────────────────
     gazebo = IncludeLaunchDescription(
@@ -47,7 +76,9 @@ def launch_setup(context, *args, **kwargs):
         output='screen'
     )
 
-    # ── t=0: EKF — fuses /odom from mecanum_drive_node + IMU ─────────────────
+    # ── t=0: EKF — fuses /odom (from planar_move plugin) + IMU ───────────────
+    # /odom is published by libgazebo_ros_planar_move.so (object_controller plugin)
+    # EKF publishes /odometry/filtered + odom→base_footprint TF
     ekf_node = Node(
         package='robot_localization',
         executable='ekf_node',
@@ -78,10 +109,8 @@ def launch_setup(context, *args, **kwargs):
         }]
     )
 
-    # NOTE: joint_state_publisher REMOVED — replaced by joint_state_broadcaster
-    # from ros2_control (spawned below after robot is loaded into Gazebo)
-
     # ── t=20: Spawn robot ────────────────────────────────────────────────────
+    # z=0.03 — small clearance above floor prevents contact bounce at spawn
     spawn = TimerAction(period=20.0, actions=[
         Node(
             package='gazebo_ros',
@@ -91,7 +120,7 @@ def launch_setup(context, *args, **kwargs):
                 '-entity', 'pta_robot',
                 '-x', '0.65',
                 '-y', '1.385',
-                '-z', '0.0',
+                '-z', '0.03',
                 '-Y', '0.0',
             ],
             output='screen'
@@ -99,8 +128,8 @@ def launch_setup(context, *args, **kwargs):
     ])
 
     # ── t=25: Spawn joint_state_broadcaster ─────────────────────────────────
-    # Waits until after robot is spawned so controller_manager is alive.
-    # Publishes /joint_states for all 4 wheel joints.
+    # Publishes /joint_states for wheel visual animation in RViz.
+    # Not used for odometry in benchmark mode.
     spawn_jsb = TimerAction(period=25.0, actions=[
         Node(
             package='controller_manager',
@@ -113,9 +142,10 @@ def launch_setup(context, *args, **kwargs):
         )
     ])
 
-    # ── t=27: Spawn wheel velocity controller ────────────────────────────────
-    # Accepts Float64MultiArray on /wheel_velocity_controller/commands
-    # Joint order: [F_L, F_R, R_L, R_R]
+    # ── t=27: Spawn mecanum_drive_controller ─────────────────────────────────
+    # Cosmetic only — makes wheels spin visually.
+    # Does not affect body motion (planar plugin handles that).
+    # Does not affect odometry (plugin owns /odom).
     spawn_wheel_ctrl = TimerAction(period=27.0, actions=[
         Node(
             package='controller_manager',
@@ -128,18 +158,11 @@ def launch_setup(context, *args, **kwargs):
         )
     ])
 
-    # ── t=29: Mecanum drive node ──────────────────────────────────────────────
-    # Converts /cmd_vel → wheel velocity commands
-    # Publishes raw /odom from wheel velocities (no TF — EKF handles that)
-    mecanum_node = TimerAction(period=29.0, actions=[
-        Node(
-            package='pta_robot_sim',
-            executable='mecanum_drive_node.py',
-            name='mecanum_drive_node',
-            output='screen',
-            parameters=[{'use_sim_time': True, 'publish_odom': False}],
-        )
-    ])
+    # NOTE: mecanum_drive_node.py is NOT launched here.
+    # It published Float64MultiArray to /wheel_velocity_controller/commands
+    # which does not exist in ros2_controllers.yaml. It was mismatched and
+    # has no effect in benchmark mode. Wheel spinning is handled by
+    # mecanum_drive_controller receiving Twist on its reference topic.
 
     # ── t=65: RViz ───────────────────────────────────────────────────────────
     rviz = TimerAction(period=65.0, actions=[
@@ -197,7 +220,7 @@ def launch_setup(context, *args, **kwargs):
     return [
         gazebo, rsp, ekf_node, laser_merger,
         spawn,
-        spawn_jsb, spawn_wheel_ctrl, mecanum_node,
+        spawn_jsb, spawn_wheel_ctrl,
         rviz,
         localization, navigation,
     ]
@@ -207,7 +230,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'nav_combo',
-            default_value='combo1',
+            default_value='combo3',
             choices=['combo1', 'combo2', 'combo3', 'combo4'],
             description='Which Nav2 parameter set to use'
         ),
