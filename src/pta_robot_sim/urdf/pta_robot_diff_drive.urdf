@@ -1,0 +1,642 @@
+<?xml version="1.0"?>
+<!-- PTA Robot URDF v7 - base_link at floor level, single root frame -->
+<!-- Fixed Frame in RViz2: base_link                                  -->
+<!-- Spawn in Gazebo at Z=0 (base_link IS the floor frame)           -->
+<robot name="pta_robot">
+
+  <!-- base_footprint: floor projection, used by Nav2 costmap -->
+  <link name="base_footprint"/>
+  <joint name="base_footprint_joint" type="fixed">
+    <origin xyz="0 0 0.030" rpy="0 0 0"/>
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+  </joint>
+
+  <!-- ==================== BASE LINK (floor level) ==================== -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="1.63866560726696" />
+      <inertia
+        ixx="0.0116959009438042" ixy="-1.11651905886033E-06" ixz="5.86067748553821E-06"
+        iyy="0.0862377526401311" iyz="4.08400707428675E-06" izz="0.0974317164456146" />
+    </inertial>
+    <visual>
+      <origin xyz="-0.342 0.1775 0.022" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/meshes/base_link.STL" />
+      </geometry>
+      <material name="light_blue">
+        <color rgba="0.792 0.819 0.933 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.015" rpy="0 0 0" />
+      <geometry>
+        <box size="0.70 0.35 0.08" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- ==================== FRONT RIGHT WHEEL ==================== -->
+  <link name="F_R_Wheel_Link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.269378410156118" />
+      <inertia
+        ixx="9.0742030098175E-05" ixy="0" ixz="0"
+        iyy="0.00014368676208438" iyz="0" izz="9.06869494092416E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/meshes/F_R_Wheel_Link.STL" />
+      </geometry>
+      <material name="dark"><color rgba="0.2 0.2 0.2 1" /></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5707963 0 0" />
+      <geometry>
+        <cylinder radius="0.0508" length="0.054" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="F_R_Wheel_Joint" type="continuous">
+    <origin xyz="0.34 -0.1775 0.022" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="F_R_Wheel_Link" />
+    <axis xyz="0 1 0" />
+    <limit effort="1000.0" velocity="30.0"/>
+    <dynamics damping="0.01" friction="0.0"/>
+  </joint>
+
+  <!-- ==================== FRONT LEFT WHEEL ==================== -->
+  <link name="F_L_Wheel_Link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.269378410156118" />
+      <inertia
+        ixx="9.07420300981753E-05" ixy="0" ixz="0"
+        iyy="0.00014368676208438" iyz="0" izz="9.06869494092422E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/meshes/F_L_Wheel_Link.STL" />
+      </geometry>
+      <material name="dark"><color rgba="0.2 0.2 0.2 1" /></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5707963 0 0" />
+      <geometry>
+        <cylinder radius="0.0508" length="0.054" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="F_L_Wheel_Joint" type="continuous">
+    <origin xyz="0.34 0.1775 0.022" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="F_L_Wheel_Link" />
+    <axis xyz="0 1 0" />
+    <limit effort="1000.0" velocity="30.0"/>
+    <dynamics damping="0.01" friction="0.0"/>
+  </joint>
+
+  <!-- ==================== REAR RIGHT WHEEL ==================== -->
+  <link name="R_R_Wheel_Link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.2693784101561" />
+      <inertia
+        ixx="9.06927387974435E-05" ixy="0" ixz="0"
+        iyy="0.000143686762083793" iyz="0" izz="9.07362407080338E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/meshes/R_R_Wheel_Link.STL" />
+      </geometry>
+      <material name="dark"><color rgba="0.2 0.2 0.2 1" /></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5707963 0 0" />
+      <geometry>
+        <cylinder radius="0.0508" length="0.054" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="R_R_Wheel_Joint" type="continuous">
+    <origin xyz="-0.34 -0.1775 0.022" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="R_R_Wheel_Link" />
+    <axis xyz="0 1 0" />
+    <limit effort="1000.0" velocity="30.0"/>
+    <dynamics damping="0.01" friction="0.0"/>
+  </joint>
+
+  <!-- ==================== REAR LEFT WHEEL ==================== -->
+  <link name="R_L_Wheel_Link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.269378410156128" />
+      <inertia
+        ixx="9.06926297994582E-05" ixy="0" ixz="0"
+        iyy="0.000143686762084222" iyz="0" izz="9.07363497074437E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/meshes/R_L_Wheel_Link.STL" />
+      </geometry>
+      <material name="dark"><color rgba="0.2 0.2 0.2 1" /></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5707963 0 0" />
+      <geometry>
+        <cylinder radius="0.0508" length="0.054" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="R_L_Wheel_Joint" type="continuous">
+    <origin xyz="-0.34 0.1775 0.022" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="R_L_Wheel_Link" />
+    <axis xyz="0 1 0" />
+    <limit effort="1000.0" velocity="30.0"/>
+    <dynamics damping="0.01" friction="0.0"/>
+  </joint>
+
+  <!-- ==================== D455 CAMERA ==================== -->
+  <link name="D455_Link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.0537533095236066" />
+      <inertia
+        ixx="6.8028991066153E-05" ixy="0" ixz="0"
+        iyy="4.12184677972619E-06" iyz="0" izz="6.4900964018947E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="-0.74194 0.13000 -0.0395" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/meshes/D455_Link.STL" />
+      </geometry>
+      <material name="dark_grey"><color rgba="0.2 0.2 0.2 1" /></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.026 0.124 0.029" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="D455_Joint" type="fixed">
+    <origin xyz="0.39994 0.0475 0.0615" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="D455_Link" />
+  </joint>
+
+  <!-- ==================== T265 CAMERA ==================== -->
+  <link name="T265_Link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.0286406264854892" />
+      <inertia
+        ixx="2.85337605482352E-05" ixy="0" ixz="0"
+        iyy="1.59977388264233E-06" iyz="0" izz="2.74673294686212E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="-0.60825 0.17750 -0.17300" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/meshes/T265_Link.STL" />
+      </geometry>
+      <material name="grey"><color rgba="0.75 0.75 0.75 1" /></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.012 0.108 0.024" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="T265_Joint" type="fixed">
+    <origin xyz="0.26625 0 0.195" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="T265_Link" />
+  </joint>
+
+  <!-- ==================== FRONT LIDAR (A2) ==================== -->
+  <link name="A2_Link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.163065240500782" />
+      <inertia
+        ixx="6.07263811322806E-05" ixy="0" ixz="0"
+        iyy="6.04372483678103E-05" iyz="0" izz="0.000107588752845482" />
+    </inertial>
+    <visual>
+      <origin xyz="-0.71200 0.03750 -0.1623" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/meshes/A2_Link.STL" />
+      </geometry>
+      <material name="light_blue"><color rgba="0.792 0.819 0.933 1" /></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.038" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="A2_Joint" type="fixed">
+    <origin xyz="0.37 0.14 0.205" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="A2_Link" />
+  </joint>
+
+  <!-- ==================== REAR LIDAR (A3) ==================== -->
+  <link name="A3_Link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.163065240500782" />
+      <inertia
+        ixx="6.07263811322806E-05" ixy="0" ixz="0"
+        iyy="6.04372483678103E-05" iyz="0" izz="0.000107588752845482" />
+    </inertial>
+    <visual>
+      <origin xyz="0.07800 0.32750 -0.1623" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/meshes/A3_Link.STL" />
+      </geometry>
+      <material name="light_blue"><color rgba="0.792 0.819 0.933 1" /></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.038" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="A3_Joint" type="fixed">
+    <origin xyz="-0.42 -0.15 0.205" rpy="0 0 3.14159" />
+    <parent link="base_link" />
+    <child link="A3_Link" />
+  </joint>
+
+
+  <gazebo reference="F_R_Wheel_Link">
+    <mu1>5.0</mu1>
+    <mu2>5.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>5.0</kd>
+    <minDepth>0.001</minDepth>
+  </gazebo>
+  <gazebo reference="F_L_Wheel_Link">
+    <mu1>5.0</mu1>
+    <mu2>5.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>5.0</kd>
+    <minDepth>0.001</minDepth>
+  </gazebo>
+  <gazebo reference="R_R_Wheel_Link">
+    <mu1>5.0</mu1>
+    <mu2>5.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>5.0</kd>
+    <minDepth>0.001</minDepth>
+  </gazebo>
+  <gazebo reference="R_L_Wheel_Link">
+    <mu1>5.0</mu1>
+    <mu2>5.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>5.0</kd>
+    <minDepth>0.001</minDepth>
+  </gazebo>
+
+  <!-- ==================== D455 SUB-FRAMES ==================== -->
+  <link name="d455_pose_coordinate"/>
+  <joint name="d455_pose_coordinate_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="D455_Link"/>
+    <child link="d455_pose_coordinate"/>
+  </joint>
+
+  <link name="d455_camera_link"/>
+  <joint name="d455_camera_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="d455_pose_coordinate"/>
+    <child link="d455_camera_link"/>
+  </joint>
+
+  <link name="d455_color_link"/>
+  <joint name="d455_color_joint" type="fixed">
+    <origin xyz="0 -0.059 0" rpy="-1.5707963 0 -1.5707963"/>
+    <parent link="d455_pose_coordinate"/>
+    <child link="d455_color_link"/>
+  </joint>
+
+  <link name="d455_depth_link"/>
+  <joint name="d455_depth_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="d455_pose_coordinate"/>
+    <child link="d455_depth_link"/>
+  </joint>
+
+  <link name="d455_infra_left_optical_link"/>
+  <joint name="d455_infra_left_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.5707963 0 -1.5707963"/>
+    <parent link="d455_pose_coordinate"/>
+    <child link="d455_infra_left_optical_link"/>
+  </joint>
+
+  <link name="d455_infra_right_optical_link"/>
+  <joint name="d455_infra_right_optical_joint" type="fixed">
+    <origin xyz="0 -0.095 0" rpy="-1.5707963 0 -1.5707963"/>
+    <parent link="d455_pose_coordinate"/>
+    <child link="d455_infra_right_optical_link"/>
+  </joint>
+
+  <link name="d455_imu_link"/>
+  <joint name="d455_imu_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="d455_pose_coordinate"/>
+    <child link="d455_imu_link"/>
+  </joint>
+
+  <!-- ==================== T265 SUB-FRAMES ==================== -->
+  <link name="t265_pose_frame"/>
+  <joint name="t265_pose_frame_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="T265_Link"/>
+    <child link="t265_pose_frame"/>
+  </joint>
+
+  <link name="t265_fisheye1_optical_link"/>
+  <joint name="t265_fisheye1_optical_joint" type="fixed">
+    <origin xyz="0 0.032 0" rpy="-1.5707963 0 -1.5707963"/>
+    <parent link="t265_pose_frame"/>
+    <child link="t265_fisheye1_optical_link"/>
+  </joint>
+
+  <link name="t265_fisheye2_optical_link"/>
+  <joint name="t265_fisheye2_optical_joint" type="fixed">
+    <origin xyz="0 -0.032 0" rpy="-1.5707963 0 -1.5707963"/>
+    <parent link="t265_pose_frame"/>
+    <child link="t265_fisheye2_optical_link"/>
+  </joint>
+
+  <link name="t265_imu_link"/>
+  <joint name="t265_imu_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="t265_pose_frame"/>
+    <child link="t265_imu_link"/>
+  </joint>
+
+  <!-- ==================== LIDAR REFERENCE FRAMES ==================== -->
+  <link name="A2_LiDAR_ref_coordinate"/>
+  <joint name="A2_LiDAR_ref_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="A2_Link"/>
+    <child link="A2_LiDAR_ref_coordinate"/>
+  </joint>
+
+  <link name="A3_LiDAR_ref_coordinate"/>
+  <joint name="A3_LiDAR_ref_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="A3_Link"/>
+    <child link="A3_LiDAR_ref_coordinate"/>
+  </joint>
+
+
+  <!-- ==================== ROS2 CONTROL INTERFACE ====================
+      Wheel-level ros2_control interface for PHASE 1 diff-drive validation.
+       Uses diff_drive_controller with left/right wheel groups.
+       Raw odometry is published by diff_drive_controller on /odom.
+       During PHASE 1, this file should not use gazebo_ros_planar_move.
+  ====================================================================== -->
+  <ros2_control name="GazeboSystem" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    <joint name="F_L_Wheel_Joint">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="F_R_Wheel_Joint">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="R_L_Wheel_Joint">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="R_R_Wheel_Joint">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+      <state_interface name="position"/>
+    </joint>
+  </ros2_control>
+
+  <!-- gazebo_ros2_control plugin — starts controller_manager inside Gazebo -->
+<gazebo>
+  <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+    <parameters>/home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/config/diff_drive_controller.yaml</parameters>
+    <robot_param>robot_description</robot_param>
+    <robot_param_node>robot_state_publisher</robot_param_node>
+  </plugin>
+</gazebo>
+
+  <!-- A2 Front LiDAR Gazebo Plugin -->
+  <gazebo reference="A2_Link">
+    <sensor type="ray" name="A2_lidar_sensor">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>540</samples>
+            <resolution>1</resolution>
+            <min_angle>-2.3562</min_angle>
+            <max_angle>2.3562</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.15</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </ray>
+      <plugin name="A2_lidar_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <remapping>~/out:=scan_front</remapping>
+        </ros>
+        <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>A2_Link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+  <!-- ========== A3 REAR LIDAR PLUGIN ========== -->
+  <gazebo reference="A3_Link">
+    <sensor type="ray" name="A3_lidar_sensor">
+      <pose>0 0 0 0 0 3.14159</pose>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>540</samples>
+            <resolution>1</resolution>
+            <min_angle>-2.3562</min_angle>
+            <max_angle>2.3562</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.15</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </ray>
+      <plugin name="A3_lidar_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <remapping>~/out:=scan_rear</remapping>
+        </ros>
+        <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>A3_Link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ========== D455 DEPTH CAMERA PLUGIN ========== -->
+  <gazebo reference="D455_Link">
+    <sensor type="depth" name="d455_depth_sensor">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>30</update_rate>
+      <camera>
+        <horizontal_fov>1.4835</horizontal_fov>
+        <image>
+          <width>848</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.6</near>
+          <far>6.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </camera>
+      <plugin name="d455_depth_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <remapping>~/image_raw:=/d455/depth/image_rect_raw</remapping>
+          <remapping>~/camera_info:=/d455/depth/camera_info</remapping>
+          <remapping>~/points:=/d455/depth/color/points</remapping>
+        </ros>
+        <camera_name>d455_depth</camera_name>
+        <frame_name>d455_infra_left_optical_link</frame_name>
+        <hack_baseline>0.0</hack_baseline>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ========== D455 RGB CAMERA PLUGIN ========== -->
+  <gazebo reference="D455_Link">
+    <sensor type="camera" name="d455_rgb_sensor">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>30</update_rate>
+      <camera>
+        <horizontal_fov>1.4835</horizontal_fov>
+        <image>
+          <width>848</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.6</near>
+          <far>6.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin name="d455_rgb_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <remapping>~/image_raw:=/d455/color/image_raw</remapping>
+          <remapping>~/camera_info:=/d455/color/camera_info</remapping>
+        </ros>
+        <camera_name>d455_color</camera_name>
+        <frame_name>d455_color_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ========== D455 IMU PLUGIN ========== -->
+  <gazebo reference="d455_imu_link">
+    <sensor name="d455_imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>200</update_rate>
+      <visualize>false</visualize>
+      <plugin name="d455_imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <remapping>~/out:=/d455/imu/data</remapping>
+        </ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        <frame_name>d455_imu_link</frame_name>
+      </plugin>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.009</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.009</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.009</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.065</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.065</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.065</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
+
+  <!-- ========== T265 IMU PLUGIN ========== -->
+  <!-- BMI055: Gyro ±2000deg/s @62.5Hz, Accel ±4g @200Hz -->
+  <gazebo reference="t265_imu_link">
+    <sensor name="t265_imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>200</update_rate>
+      <visualize>false</visualize>
+      <plugin name="t265_imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <remapping>~/out:=/t265/imu/data</remapping>
+        </ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        <frame_name>t265_imu_link</frame_name>
+      </plugin>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.009</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.009</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.009</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.065</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.065</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.065</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
+</robot>

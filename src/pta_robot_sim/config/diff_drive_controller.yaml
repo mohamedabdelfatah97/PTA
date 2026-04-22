@@ -1,0 +1,71 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50
+    use_sim_time: true
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+
+diff_drive_controller:
+  ros__parameters:
+    use_sim_time: true
+
+    # Your robot has 4 wheels, so for diff drive we group them by side.
+    left_wheel_names:  ["F_L_Wheel_Joint", "R_L_Wheel_Joint"]
+    right_wheel_names: ["F_R_Wheel_Joint", "R_R_Wheel_Joint"]
+
+    # Because each side has 2 driven wheels
+    wheels_per_side: 2
+
+    # IMPORTANT:
+    # Replace these two values with the exact values from your URDF if different.
+    wheel_separation: 0.355
+    wheel_radius: 0.0508
+
+    wheel_separation_multiplier: 1.0
+    left_wheel_radius_multiplier: 1.0
+    right_wheel_radius_multiplier: 1.0
+
+    publish_rate: 50.0
+    cmd_vel_timeout: 0.5
+    velocity_rolling_window_size: 10
+
+    # Use encoder/joint feedback, not open-loop estimation
+    open_loop: false
+    position_feedback: true
+
+    # Frames
+    base_frame_id: base_footprint
+    odom_frame_id: odom
+    enable_odom_tf: true
+
+    # For easy manual testing with geometry_msgs/Twist
+    # Topic will be: /diff_drive_controller/cmd_vel_unstamped
+    use_stamped_vel: false
+
+    publish_limited_velocity: true
+
+    pose_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 0.01]
+    twist_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 0.01]
+
+    # Linear limits
+    linear.x.has_velocity_limits: true
+    linear.x.min_velocity: -0.8
+    linear.x.max_velocity: 0.8
+    linear.x.has_acceleration_limits: true
+    linear.x.max_acceleration: 1.0
+    linear.x.min_acceleration: -1.0
+    linear.x.has_jerk_limits: false
+
+    # Angular limits
+    angular.z.has_velocity_limits: true
+    angular.z.min_velocity: -1.5
+    angular.z.max_velocity: 1.5
+    angular.z.has_acceleration_limits: true
+    angular.z.max_acceleration: 2.0
+    angular.z.min_acceleration: -2.0
+    angular.z.has_jerk_limits: false

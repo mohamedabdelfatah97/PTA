@@ -408,10 +408,10 @@
 
 
   <!-- ==================== ROS2 CONTROL INTERFACE ====================
-       Replaces gazebo_ros_planar_move with proper wheel-level simulation.
-       Provides velocity command interfaces for all 4 mecanum wheels.
-       Odometry is published by mecanum_drive_node.py from joint states.
-       TF odom->base_footprint is published by the EKF node.
+        Benchmark Nav2 backend with wheel joints plus planar body motion.
+        gazebo_ros_planar_move remains the active body-motion and /odom source.
+        mecanum_drive_controller is kept only for joint state / wheel visualization.
+        EKF fuses benchmark /odom and IMU for Nav2 consumption.
   ====================================================================== -->
   <ros2_control name="GazeboSystem" type="system">
     <hardware>
@@ -442,7 +442,7 @@
   <!-- gazebo_ros2_control plugin — starts controller_manager inside Gazebo -->
 <gazebo>
   <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-    <parameters>/home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/config/ros2_controllers.yaml</parameters>
+    <parameters>/home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/config/mecanum_drive_controller.yaml</parameters>
     <robot_param>robot_description</robot_param>
     <robot_param_node>robot_state_publisher</robot_param_node>
   </plugin>

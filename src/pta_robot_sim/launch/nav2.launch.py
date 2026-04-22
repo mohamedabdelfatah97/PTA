@@ -42,7 +42,7 @@ def launch_setup(context, *args, **kwargs):
     nav2_bringup   = get_package_share_directory('nav2_bringup')
     gazebo_ros_pkg = get_package_share_directory('gazebo_ros')
 
-    urdf_file  = os.path.join(pkg, 'urdf', 'pta_robot_planar.urdf')
+    urdf_file  = os.path.join(pkg, 'urdf', 'pta_robot_mecanum_drive.urdf')
     world_file = os.path.join(pkg, 'worlds', 'test_room.world')
     map_file   = os.path.join(pkg, 'maps', 'test_room.yaml')
 
@@ -159,10 +159,10 @@ def launch_setup(context, *args, **kwargs):
     ])
 
     # NOTE: mecanum_drive_node.py is NOT launched here.
-    # It published Float64MultiArray to /wheel_velocity_controller/commands
-    # which does not exist in ros2_controllers.yaml. It was mismatched and
-    # has no effect in benchmark mode. Wheel spinning is handled by
-    # mecanum_drive_controller receiving Twist on its reference topic.
+    # It published Float64MultiArray to /wheel_velocity_controller/commands,
+    # which does not exist in mecanum_drive_controller.yaml and is not used
+    # in this benchmark path. Body motion still comes from gazebo_ros_planar_move.
+    # mecanum_drive_controller is only for optional wheel/joint visualization.
 
     # ── t=65: RViz ───────────────────────────────────────────────────────────
     rviz = TimerAction(period=65.0, actions=[
