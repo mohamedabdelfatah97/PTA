@@ -166,14 +166,12 @@
     <dynamics damping="0.01" friction="0.0"/>
   </joint>
 
-
-
   <gazebo reference="F_R_Wheel_Link">
     <mu1>1.0</mu1>
-    <mu2>0.05</mu2>
+    <mu2>0.12</mu2>
     <fdir1>1 0 0</fdir1>
     <slip1>0.0</slip1>
-    <slip2>0.2</slip2>
+    <slip2>0.05</slip2>
     <kp>1000000.0</kp>
     <kd>10.0</kd>
     <minDepth>0.001</minDepth>
@@ -182,10 +180,10 @@
 
   <gazebo reference="F_L_Wheel_Link">
     <mu1>1.0</mu1>
-    <mu2>0.05</mu2>
+    <mu2>0.12</mu2>
     <fdir1>1 0 0</fdir1>
     <slip1>0.0</slip1>
-    <slip2>0.2</slip2>
+    <slip2>0.05</slip2>
     <kp>1000000.0</kp>
     <kd>10.0</kd>
     <minDepth>0.001</minDepth>
@@ -194,10 +192,10 @@
 
   <gazebo reference="R_R_Wheel_Link">
     <mu1>1.0</mu1>
-    <mu2>0.05</mu2>
+    <mu2>0.12</mu2>
     <fdir1>1 0 0</fdir1>
     <slip1>0.0</slip1>
-    <slip2>0.2</slip2>
+    <slip2>0.05</slip2>
     <kp>1000000.0</kp>
     <kd>10.0</kd>
     <minDepth>0.001</minDepth>
@@ -206,17 +204,15 @@
 
   <gazebo reference="R_L_Wheel_Link">
     <mu1>1.0</mu1>
-    <mu2>0.05</mu2>
+    <mu2>0.12</mu2>
     <fdir1>1 0 0</fdir1>
     <slip1>0.0</slip1>
-    <slip2>0.2</slip2>
+    <slip2>0.05</slip2>
     <kp>1000000.0</kp>
     <kd>10.0</kd>
     <minDepth>0.001</minDepth>
     <maxVel>0.1</maxVel>
   </gazebo>
-
-
 
   <!-- ==================== D455 CAMERA ==================== -->
   <link name="D455_Link">
