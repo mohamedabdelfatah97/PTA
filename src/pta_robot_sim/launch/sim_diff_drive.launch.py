@@ -72,7 +72,9 @@ def generate_launch_description():
     pkg = get_package_share_directory('pta_robot_sim')
     gazebo_ros_pkg = get_package_share_directory('gazebo_ros')
 
-    urdf_file = os.path.join(pkg, 'urdf', 'pta_robot_diff_drive.urdf')
+    # urdf_file = os.path.join(pkg, 'urdf', 'pta_robot_diff_drive.urdf')
+    # urdf_file = os.path.join(pkg, 'urdf', 'pta_robot_diff_drive_rear_axle_2wd_full.urdf')
+    urdf_file = os.path.join(pkg, 'urdf', 'pta_robot_skid_steer_diff_mode.urdf')
     default_world = os.path.join(pkg, 'worlds', 'test_room.world')
     default_ekf = os.path.join(pkg, 'config', 'ekf.yaml')
     default_rviz = os.path.join(pkg, 'rviz', 'pta_robot.rviz')
