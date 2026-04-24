@@ -3,7 +3,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
@@ -144,15 +144,16 @@ def generate_launch_description():
         parameters=[nav2_params],
     )
 
-    rviz_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        output='screen',
-        condition=IfCondition(use_rviz),
-        arguments=['-d', rviz_config],
-        parameters=[{'use_sim_time': use_sim_time}],
-    )
+    rviz_node = TimerAction(period=30.0, actions=[
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            output='screen',
+            arguments=['-d', rviz_config],
+            parameters=[{'use_sim_time': use_sim_time}],
+        )
+    ])
 
     # Bridge Nav2 velocity commands to the diff drive controller input topic.
     # This matches the working manual relay test:
