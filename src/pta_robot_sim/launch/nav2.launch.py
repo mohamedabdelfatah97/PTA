@@ -51,7 +51,6 @@ def launch_setup(context, *args, **kwargs):
 
     combo = LaunchConfiguration('nav_combo').perform(context)
     combo_to_file = {
-        'combo1': os.path.join(pkg, 'config', 'nav2', 'combo1_dwb_navfn_diffdrive.yaml'),
         'combo2': os.path.join(pkg, 'config', 'nav2', 'combo2_dwb_navfn_holonomic.yaml'),
         'combo3': os.path.join(pkg, 'config', 'nav2', 'combo3_mppi_navfn.yaml'),
         'combo4': os.path.join(pkg, 'config', 'nav2', 'combo4_mppi_smac2d.yaml'),
@@ -85,7 +84,7 @@ def launch_setup(context, *args, **kwargs):
         name='ekf_filter_node',
         output='screen',
         parameters=[
-            os.path.join(pkg, 'config', 'ekf.yaml'),
+            os.path.join(pkg, 'config', 'ekf_holonomic.yaml'),
             {'use_sim_time': True},
         ]
     )
@@ -230,9 +229,9 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'nav_combo',
-            default_value='combo3',
-            choices=['combo1', 'combo2', 'combo3', 'combo4'],
-            description='Which Nav2 parameter set to use'
+            default_value='combo2',
+            choices=['combo2', 'combo3', 'combo4'],
+            description='Which holonomic Nav2 parameter set to use'
         ),
         OpaqueFunction(function=launch_setup),
     ])
