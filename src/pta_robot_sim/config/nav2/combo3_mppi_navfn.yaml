@@ -1,3 +1,10 @@
+# REVISED COMBO3 BASELINE
+# - MPPI + NavFn, holonomic
+# - No custom BT XML dependency; bt_navigator will use Nav2 default behavior tree
+# - AMCL still uses merged /scan; local costmap uses /scan_front + depth_camera
+# - Global inflation widened to push paths away from objects
+# - Local controller/costmap rates reduced to avoid missed control loops
+
 # =======================================================================
 # Combination 3 — MPPI + NavFn (Holonomic/Mecanum Mode)
 # Controller: MPPI — native Omni motion model
@@ -102,8 +109,6 @@ bt_navigator:
     odom_topic: /odometry/filtered
     bt_loop_duration: 10
     default_server_timeout: 20
-    default_nav_to_pose_bt_xml: /home/pta-sim/pta_sim_ws/install/pta_robot_sim/share/pta_robot_sim/behavior_trees/navigate_to_pose_combo3.xml
-    always_reload_bt_xml: true
     navigate_to_pose:
       plugin: nav2_bt_navigator/NavigateToPoseNavigator
     navigate_through_poses:
@@ -159,56 +164,57 @@ bt_navigator:
 controller_server:
   ros__parameters:
     use_sim_time: true
-    controller_frequency: 20.0            # must match: 1/model_dt = 1/0.05 = 20Hz
+    controller_frequency: 8.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.001       # unlocked for Omni
     min_theta_velocity_threshold: 0.001
-    failure_tolerance: 0.3
+    failure_tolerance: 2.0
     progress_checker_plugins: [progress_checker]
     goal_checker_plugins: [general_goal_checker]
     controller_plugins: [FollowPath]
+    current_goal_checker: general_goal_checker
 
     progress_checker:
       plugin: nav2_controller::SimpleProgressChecker
-      required_movement_radius: 0.05      # from real robot
-      movement_time_allowance: 10.0       # from real robot
+      required_movement_radius: 0.04
+      movement_time_allowance: 30.0
 
     general_goal_checker:
       stateful: true
       plugin: nav2_controller::SimpleGoalChecker
-      xy_goal_tolerance: 0.08             # from real robot
-      yaw_goal_tolerance: 0.25            # slightly relaxed vs real robot 0.1
+      xy_goal_tolerance: 0.22
+      yaw_goal_tolerance: 0.70
 
     FollowPath:
       plugin: nav2_mppi_controller::MPPIController
       motion_model: Omni
 
-      time_steps: 40                      # 40 × 0.05 = 2.0s horizon (NUC compromise vs real robot 50)
-      model_dt: 0.05                      # = 1/controller_frequency
-      batch_size: 600                     # reduced from real robot 2000 for NUC 10
+      time_steps: 24
+      model_dt: 0.125
+      batch_size: 800
       iteration_count: 1
-      prune_distance: 2.0
-      transform_tolerance: 0.2
+      prune_distance: 1.5
+      transform_tolerance: 0.5
       temperature: 0.3                    # from real robot
       gamma: 0.015                        # from real robot
       visualize: false
       reset_period: 1.0
       regenerate_noises: false
 
-      vx_max: 0.20                        # real robot: 0.25, slightly reduced for sim
-      vx_min: -0.10                       # from real robot
-      vy_max: 0.15                        # unlocked for Omni (real robot: 0.0)
-      wz_max: 1.2                         # real robot: 2.0, reduced for sim stability
+      vx_max: 0.22
+      vx_min: -0.06
+      vy_max: 0.12
+      wz_max: 0.75
 
-      ax_max: 1.0                         # from real robot
-      ax_min: -1.0                        # from real robot
-      ay_max: 1.0                         # unlocked for Omni (real robot: 0.0)
-      ay_min: -1.0                        # unlocked for Omni (real robot: 0.0)
-      az_max: 2.5                         # from real robot
+      ax_max: 0.45
+      ax_min: -0.55
+      ay_max: 0.30
+      ay_min: -0.35
+      az_max: 1.00
 
-      vx_std: 0.2                         # from real robot
-      vy_std: 0.1                         # unlocked for Omni (real robot: 0.0)
-      wz_std: 0.2                         # from real robot
+      vx_std: 0.18
+      vy_std: 0.10
+      wz_std: 0.25
 
       TrajectoryVisualizer:
         trajectory_step: 5
@@ -216,8 +222,8 @@ controller_server:
 
       TrajectoryValidator:
         plugin: "mppi::DefaultOptimalTrajectoryValidator"
-        collision_lookahead_time: 2.0
-        consider_footprint: false
+        collision_lookahead_time: 1.5
+        consider_footprint: true
 
       # Critics — real robot DiffDrive set adapted for Omni
       critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "GoalAngleCritic", "PathFollowCritic", "PathAngleCritic", "PathAlignCritic", "PreferForwardCritic"]
@@ -230,10 +236,10 @@ controller_server:
       CostCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 1.5                  # from real robot
-        critical_cost: 350.0              # from real robot
-        near_collision_cost: 200.0        # from real robot
-        consider_footprint: false         # from real robot
+        cost_weight: 3.5
+        critical_cost: 250.0
+        near_collision_cost: 450.0
+        consider_footprint: true
         collision_cost: 1000000.0
         inflation_layer_name: "inflation_layer"
         near_goal_distance: 0.5           # from real robot
@@ -254,7 +260,7 @@ controller_server:
       PathFollowCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 8.0                  # from real robot
+        cost_weight: 6.0
         offset_from_furthest: 6           # from real robot
         threshold_to_consider: 0.6        # from real robot
 
@@ -270,7 +276,7 @@ controller_server:
       PathAlignCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 3.5                  # reduced vs real robot 14.0 — Omni doesn't need strict path lock
+        cost_weight: 2.5
         max_path_occupancy_ratio: 0.12    # from real robot
         trajectory_point_step: 4          # from real robot
         threshold_to_consider: 0.5        # from real robot
@@ -280,7 +286,7 @@ controller_server:
       PreferForwardCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 2.5                  # reduced vs real robot 4.0 — Omni can legitimately go sideways
+        cost_weight: 0.8
         threshold_to_consider: 0.5        # from real robot
 
       # Uncomment if robot twirls excessively
@@ -293,8 +299,8 @@ global_costmap:
   global_costmap:
     ros__parameters:
       use_sim_time: true
-      update_frequency: 5.0               # from real robot
-      publish_frequency: 5.0              # from real robot
+      update_frequency: 3.0
+      publish_frequency: 1.0
       global_frame: map
       robot_base_frame: base_footprint
       footprint: "[[-0.35, -0.175], [-0.35, 0.175], [0.35, 0.175], [0.35, -0.175]]"
@@ -311,29 +317,29 @@ global_costmap:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
         observation_sources: scan          # global = LiDAR only (matches real robot)
-        scan:
-          topic: /scan                     # sim topic (real robot: /merged_scan)
+        scan_front:
+          topic: /scan_front
           max_obstacle_height: 2.0
           clearing: true
           marking: true
           data_type: LaserScan
-          raytrace_max_range: 5.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 5.0
-          obstacle_min_range: 0.0
+          raytrace_max_range: 4.0
+          raytrace_min_range: 0.15
+          obstacle_max_range: 3.5
+          obstacle_min_range: 0.15
           observation_persistence: 0.0
 
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
-        cost_scaling_factor: 3.0          # from real robot — proven working value
-        inflation_radius: 0.4             # from real robot — proven working value
+        cost_scaling_factor: 1.5
+        inflation_radius: 0.75
 
 local_costmap:
   local_costmap:
     ros__parameters:
       use_sim_time: true
-      update_frequency: 20.0              # matched to controller_frequency
-      publish_frequency: 5.0
+      update_frequency: 5.0
+      publish_frequency: 2.0
       global_frame: odom                  # sim: odom (real robot: odom_base)
       robot_base_frame: base_footprint
       rolling_window: true
@@ -348,35 +354,35 @@ local_costmap:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
         footprint_clearing_enabled: true
-        observation_sources: scan depth_camera   # LiDAR + depth (matches real robot structure)
-        scan:
-          topic: /scan                     # sim topic (real robot: /merged_scan)
+        observation_sources: scan_front depth_camera
+        scan_front:
+          topic: /scan_front
           max_obstacle_height: 2.0
           clearing: true
           marking: true
           data_type: LaserScan
-          raytrace_max_range: 5.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 5.0
-          obstacle_min_range: 0.0
+          raytrace_max_range: 4.0
+          raytrace_min_range: 0.15
+          obstacle_max_range: 3.5
+          obstacle_min_range: 0.15
           observation_persistence: 0.0
         depth_camera:                      # D455 (real robot: /fcamera/depth/color/points)
           topic: /d455_depth/points        # sim topic — confirmed publishing
           max_obstacle_height: 2.0
           min_obstacle_height: 0.05        # from real robot
-          clearing: true
+          clearing: false
           marking: true
           data_type: PointCloud2
-          obstacle_max_range: 4.0          # from real robot
-          obstacle_min_range: 0.0
-          raytrace_max_range: 4.5          # from real robot
-          raytrace_min_range: 0.0
+          obstacle_max_range: 2.2
+          obstacle_min_range: 0.30
+          raytrace_max_range: 2.5
+          raytrace_min_range: 0.30
           observation_persistence: 0.0
 
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
-        cost_scaling_factor: 3.0          # from real robot — proven working value
-        inflation_radius: 0.4             # from real robot — proven working value
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.40
 
 map_server:
   ros__parameters:
@@ -399,7 +405,7 @@ planner_server:
 
     GridBased:
       plugin: nav2_navfn_planner/NavfnPlanner   # combo3 = NavFn
-      tolerance: 0.1
+      tolerance: 0.25
       use_astar: true
       allow_unknown: true
 
@@ -428,7 +434,7 @@ smoother_server:
     simple_smoother:
       plugin: nav2_smoother::SimpleSmoother
       tolerance: 1.0e-10
-      max_its: 1000
+      max_its: 200
       do_refinement: true
 
 behavior_server:
@@ -436,7 +442,7 @@ behavior_server:
     use_sim_time: true
     costmap_topic: local_costmap/costmap_raw
     footprint_topic: local_costmap/published_footprint
-    cycle_frequency: 10.0
+    cycle_frequency: 5.0
     behavior_plugins: [spin, backup, drive_on_heading, assisted_teleop, wait]
     spin:
       plugin: nav2_behaviors/Spin
@@ -451,10 +457,10 @@ behavior_server:
     global_frame: odom                    # sim: odom (real robot: odom_base)
     robot_base_frame: base_footprint
     transform_tolerance: 0.5
-    simulate_ahead_time: 2.0              # from real robot
-    max_rotational_vel: 1.5               # from real robot
-    min_rotational_vel: 0.2               # from real robot
-    rotational_acc_lim: 2.0               # from real robot
+    simulate_ahead_time: 1.0
+    max_rotational_vel: 0.8
+    min_rotational_vel: 0.1
+    rotational_acc_lim: 0.8
 
 waypoint_follower:
   ros__parameters:
@@ -470,13 +476,13 @@ waypoint_follower:
 velocity_smoother:
   ros__parameters:
     use_sim_time: true
-    smoothing_frequency: 20.0             # matches controller_frequency
+    smoothing_frequency: 20.0
     scale_velocities: false
-    feedback: CLOSED_LOOP
-    max_velocity: [0.20, 0.15, 1.2]       # matches vx_max, vy_max, wz_max
-    min_velocity: [-0.10, -0.15, -1.2]    # matches vx_min, symmetric vy and wz
-    max_accel: [1.0, 1.0, 2.5]            # matches ax_max, ay_max, az_max
-    max_decel: [-1.0, -1.0, -2.5]
+    feedback: "OPEN_LOOP"
+    max_velocity: [0.22, 0.12, 0.75]
+    min_velocity: [-0.06, -0.12, -0.75]
+    max_accel: [0.45, 0.30, 1.00]
+    max_decel: [-0.55, -0.35, -1.00]
     odom_topic: /odometry/filtered
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
@@ -485,7 +491,7 @@ velocity_smoother:
 lifecycle_manager_localization:
   ros__parameters:
     use_sim_time: true
-    autostart: false
+    autostart: true
     bond_timeout: 15.0
     node_names:
       - map_server
@@ -494,7 +500,7 @@ lifecycle_manager_localization:
 lifecycle_manager_navigation:
   ros__parameters:
     use_sim_time: true
-    autostart: false
+    autostart: true
     bond_timeout: 15.0
     node_names:
       - controller_server
