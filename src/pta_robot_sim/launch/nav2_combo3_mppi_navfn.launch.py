@@ -113,6 +113,34 @@ def launch_setup(context, *args, **kwargs):
         }],
     )
 
+    safety_cloud_global = Node(
+        package='pta_robot_sim',
+        executable='safety_obstacle_cloud_node',
+        name='safety_obstacle_cloud_global_node',
+        output='screen',
+        parameters=[{
+            'use_sim_time': True,
+            'input_scan_topic': '/scan',
+            'output_cloud_topic': '/safety_obstacle_cloud_global',
+            'padding_radius': 0.14,
+            'point_z': 0.05,
+        }]
+    )
+
+    safety_cloud_local = Node(
+        package='pta_robot_sim',
+        executable='safety_obstacle_cloud_node',
+        name='safety_obstacle_cloud_local_node',
+        output='screen',
+        parameters=[{
+            'use_sim_time': True,
+            'input_scan_topic': '/scan',
+            'output_cloud_topic': '/safety_obstacle_cloud_local',
+            'padding_radius': 0.20,
+            'point_z': 0.05,
+        }]
+    )
+
     spawn_robot = TimerAction(
         period=20.0,
         actions=[
@@ -216,6 +244,8 @@ def launch_setup(context, *args, **kwargs):
         rsp,
         ekf,
         laser_merger,
+        safety_cloud_global,
+        safety_cloud_local,
         spawn_robot,
         spawn_jsb,
         spawn_mecanum,

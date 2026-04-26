@@ -177,10 +177,10 @@ controller_server:
       reset_period: 1.0
       regenerate_noises: false
 
-      vx_max: 0.07
-      vx_min: 0.0
+      vx_max: 0.10
+      vx_min: -0.035
       vy_max: 0.56
-      wz_max: 0.14
+      wz_max: 0.16
 
       ax_max: 0.22
       ax_min: -0.30
@@ -188,9 +188,9 @@ controller_server:
       ay_min: -1.40
       az_max: 0.25
 
-      vx_std: 0.035
+      vx_std: 0.045
       vy_std: 0.60
-      wz_std: 0.05
+      wz_std: 0.06
 
       TrajectoryVisualizer:
         trajectory_step: 5
@@ -198,7 +198,7 @@ controller_server:
 
       TrajectoryValidator:
         plugin: "mppi::DefaultOptimalTrajectoryValidator"
-        collision_lookahead_time: 1.6
+        collision_lookahead_time: 2.4
         consider_footprint: true
 
       critics:
@@ -232,7 +232,7 @@ controller_server:
       GoalCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 1.5
+        cost_weight: 0.8
         threshold_to_consider: 0.6
 
       GoalAngleCritic:
@@ -244,7 +244,7 @@ controller_server:
       PathFollowCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 5.0
+        cost_weight: 1.6
         offset_from_furthest: 2
         threshold_to_consider: 0.8
 
@@ -260,8 +260,8 @@ controller_server:
       PathAlignCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 2.5
-        max_path_occupancy_ratio: 0.85
+        cost_weight: 0.55
+        max_path_occupancy_ratio: 0.65
         trajectory_point_step: 1
         threshold_to_consider: 0.8
         offset_from_furthest: 4
@@ -382,8 +382,8 @@ local_costmap:
       resolution: 0.05
 
       # Larger local footprint for MPPI collision checking.
-      footprint: "[[0.55, 0.36], [0.55, -0.36], [-0.76, -0.36], [-0.76, 0.36]]"
-      footprint_padding: 0.03
+      footprint: "[[0.55, 0.38], [0.55, -0.38], [-0.80, -0.38], [-0.80, 0.38]]"
+      footprint_padding: 0.025 # was 0.025 Perfect Run!
 
       always_send_full_costmap: true
 
@@ -399,7 +399,7 @@ local_costmap:
         # CLEAN TEST:
         # Use raw A2/A3 lidars directly.
         # Safety cloud and depth camera are disabled for now.
-        observation_sources: scan_front scan_rear
+        observation_sources: scan_front scan_rear safety_cloud_local
 
         scan_front:
           topic: /scan_front
@@ -439,24 +439,24 @@ local_costmap:
         #   min_obstacle_height: 0.05
         #   max_obstacle_height: 2.0
         #   observation_persistence: 0.15
-        #
-        # safety_cloud_local:
-        #   topic: /safety_obstacle_cloud_local
-        #   data_type: PointCloud2
-        #   marking: true
-        #   clearing: false
-        #   obstacle_min_range: 0.0
-        #   obstacle_max_range: 10.0
-        #   raytrace_min_range: 0.0
-        #   raytrace_max_range: 10.0
-        #   min_obstacle_height: 0.0
-        #   max_obstacle_height: 1.5
-        #   observation_persistence: 0.25
+        
+        safety_cloud_local:
+          topic: /safety_obstacle_cloud_local
+          data_type: PointCloud2
+          marking: true
+          clearing: false
+          obstacle_min_range: 0.0
+          obstacle_max_range: 10.0
+          raytrace_min_range: 0.0
+          raytrace_max_range: 10.0
+          min_obstacle_height: 0.0
+          max_obstacle_height: 1.5
+          observation_persistence: 0.08
 
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         cost_scaling_factor: 4.0
-        inflation_radius: 0.42
+        inflation_radius: 0.40
 
 map_server:
   ros__parameters:
@@ -550,10 +550,10 @@ velocity_smoother:
     scale_velocities: false
     feedback: "OPEN_LOOP"
 
-    max_velocity: [0.22, 0.56, 0.26]
-    min_velocity: [0.0, -0.56, -0.26]
-    max_accel: [0.55, 1.40, 0.70]
-    max_decel: [-0.55, -1.40, -0.70]
+    max_velocity: [0.12, 0.56, 0.20]
+    min_velocity: [-0.04, -0.56, -0.20]
+    max_accel: [0.45, 1.40, 0.55]
+    max_decel: [-0.45, -1.40, -0.55]
 
     odom_topic: /odometry/filtered
     odom_duration: 0.1
